@@ -1,6 +1,12 @@
-*.class
-
-# Package Files #
-*.jar
-*.war
-*.ear
+.fbprefs
+.project
+.settings
+.classpath
+target
+bin
+.DS_Store
+tmpdir
+.idea
+*.iml
+.clover
+.cache
