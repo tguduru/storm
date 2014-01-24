@@ -30,7 +30,7 @@ public class WordsCountTopology {
 
         // Config setup
         final Config config = new Config();
-        config.put("file", args[0]);
+        config.put("file", "src/main/resources/wordsFile.txt");
         config.setDebug(false);
 
         config.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
@@ -40,7 +40,8 @@ public class WordsCountTopology {
         localCluster.submitTopology("Words-Topology", config, topologyBuilder.createTopology());
         // wait for topology to finish the work
         try {
-            Thread.sleep(1000);
+            // wait to complete all data processing
+            Thread.sleep(5000);
         } catch (final InterruptedException e) {
             e.printStackTrace();
         }

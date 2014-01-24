@@ -1,5 +1,8 @@
 package org.storm.spouts;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.Map;
 
 import backtype.storm.spout.SpoutOutputCollector;
@@ -7,6 +10,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Values;
 
 /**
  * Word reader topology spout to read lines and send them to bolts for word counts app.
@@ -19,12 +23,32 @@ public class WordReaderSpout implements IRichSpout {
      */
     private static final long serialVersionUID = 3176783787478077416L;
 
+    private SpoutOutputCollector spoutOutputCollector;
+    private FileReader fileReader;
+    private boolean completed = false;
+    private TopologyContext topologyContext;
+
+    /**
+     * Is the topology running in distributed mode/local mode
+     * @return boolean , return false as running in local mode only
+     */
+    public boolean isDistributed() {
+        return false;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void open(@SuppressWarnings("rawtypes") final Map conf, final TopologyContext context,
             final SpoutOutputCollector collector) {
+        try {
+            this.topologyContext = context;
+            this.fileReader = new FileReader(conf.get("file").toString());
+        } catch (final FileNotFoundException ex) {
+            throw new RuntimeException("Error reading file", ex);
+        }
+        this.spoutOutputCollector = collector;
     }
 
     /**
@@ -32,8 +56,6 @@ public class WordReaderSpout implements IRichSpout {
      */
     @Override
     public void close() {
-        // TODO Auto-generated method stub
-
     }
 
     /**
@@ -41,7 +63,6 @@ public class WordReaderSpout implements IRichSpout {
      */
     @Override
     public void activate() {
-        // TODO Auto-generated method stub
 
     }
 
@@ -50,7 +71,6 @@ public class WordReaderSpout implements IRichSpout {
      */
     @Override
     public void deactivate() {
-        // TODO Auto-generated method stub
 
     }
 
@@ -59,6 +79,26 @@ public class WordReaderSpout implements IRichSpout {
      */
     @Override
     public void nextTuple() {
+        if (completed) {
+            try {
+                Thread.sleep(10);
+            } catch (final InterruptedException ex) {
+                // swallow exception
+            }
+        }
+        String nextLine;
+        final BufferedReader bufferedReader = new BufferedReader(fileReader);
+        try {
+            while ((nextLine = bufferedReader.readLine()) != null) {
+                this.spoutOutputCollector.emit(new Values(nextLine), nextLine);
+            }
+
+        } catch (final Exception ex) {
+            throw new RuntimeException("Error reading tuple", ex);
+        } finally {
+            completed = true;
+        }
+
     }
 
     /**
@@ -66,7 +106,6 @@ public class WordReaderSpout implements IRichSpout {
      */
     @Override
     public void ack(final Object msgId) {
-        // TODO Auto-generated method stub
 
     }
 
@@ -75,8 +114,7 @@ public class WordReaderSpout implements IRichSpout {
      */
     @Override
     public void fail(final Object msgId) {
-        // TODO Auto-generated method stub
-
+        System.out.println("FAILED : " + msgId);
     }
 
     /**
@@ -92,7 +130,6 @@ public class WordReaderSpout implements IRichSpout {
      */
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        // TODO Auto-generated method stub
         return null;
     }
 

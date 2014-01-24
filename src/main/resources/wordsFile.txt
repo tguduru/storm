@@ -1,0 +1,3 @@
+This is the text file to count the number of words in a
+this file using Storm API. This example has one spout and two bolts.
+Spouts and bolts will process this file and output the word counts by each word.
